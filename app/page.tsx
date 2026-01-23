@@ -11,10 +11,10 @@ export default function Home() {
       <header className="w-full flex justify-between items-center px-8 py-6 bg-white shadow-md sticky top-0 z-50">
         <h1 className="text-2xl font-bold text-indigo-600">Donation App</h1>
         <nav className="flex gap-4">
-          <Link href="/users/login" className="text-indigo-600 font-medium hover:text-indigo-800">
+          <Link href="/login" className="text-indigo-600 font-medium hover:text-indigo-800">
             Login
           </Link>
-          <Link href="/users/signup">
+          <Link href="/signup">
             <Button variant="default" className="bg-indigo-600 hover:bg-indigo-700 text-white">
               Sign Up
             </Button>
@@ -31,12 +31,12 @@ export default function Home() {
           Build, manage, and grow your projects efficiently with our modern tools.
         </p>
         <div className="flex gap-4">
-          <Link href="/users/signup">
+          <Link href="/signup">
             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
               Get Started
             </Button>
           </Link>
-          <Link href="/users/login">
+          <Link href="/login">
             <Button variant="outline" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50 px-6 py-3 rounded-lg">
               Login
             </Button>

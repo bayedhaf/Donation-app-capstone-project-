@@ -107,7 +107,7 @@ import Link from "next/link";
 
           <CardFooter className="flex flex-col gap-3">
             <CardAction>
-              <Link href="/users/signup">
+              <Link href="/signup">
                 <Button variant="link" className="text-indigo-600 hover:text-indigo-800">
                   New here? Create an account
                 </Button>

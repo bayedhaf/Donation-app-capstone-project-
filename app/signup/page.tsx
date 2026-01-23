@@ -126,7 +126,7 @@ export default function SignupPage() {
 
         <CardFooter className="flex flex-col gap-3">
             <CardAction>
-            <Link href="/users/login">
+            <Link href="/login">
               <Button variant="link" className="text-indigo-600 hover:text-indigo-800">
                   Already have an account? Sign In
               </Button>
