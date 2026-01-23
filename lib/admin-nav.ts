@@ -3,6 +3,7 @@ import {
   HandHeart,
   Package,
   Building2,
+ 
   CheckCircle,
   Settings,
 } from "lucide-react";
@@ -19,6 +20,12 @@ export const items = [
     url: "/admin/donation-requests",
     icon: HandHeart,
     description: "Review and manage incoming donation requests",
+  },
+   {
+    title: "Orgs Register",
+    url: "/admin/register-orgs",
+    icon: Building2,
+    description: "Register new organizations",
   },
   {
     title: "Donated Items",
