@@ -2,10 +2,21 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    // Add image hostnames used by your API responses
-    domains: [
-      "example.com",
-      // Add real API image hosts here, e.g., "cdn.yourapi.com"
+    // Use remotePatterns to avoid wildcard host vulnerabilities
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "capstone-api-dwzu.onrender.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "example.com",
+        port: "",
+        pathname: "/**",
+      },
+      // Add additional trusted hosts here
     ],
   },
 };

@@ -16,11 +16,13 @@ import Link from "next/link";
 
   import { apiPost } from "@/lib/api";
   import { useState } from "react";
+import { useRouter } from "next/navigation";
 
   export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const route=useRouter()
 
     async function handleLogin(formData: FormData) {
       setError(null);
@@ -32,9 +34,14 @@ import Link from "next/link";
       };
 
       try {
-        await apiPost("/users/login", payload);
+  const res = await apiPost<{ accessToken?: string; token?: string }>("/users/login", payload);
+  const token = res?.accessToken || res?.token;
+        if (token && typeof document !== "undefined") {
+          document.cookie = `accessToken=${encodeURIComponent(token)}; Path=/; SameSite=Lax`;
+        }
         setSuccess("Login successful.");
         // Optional: redirect after login
+             route.push('/admin')
         // setTimeout(() => (window.location.href = "/"), 400);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Login failed";

@@ -16,11 +16,13 @@ import Link from "next/link";
 
 import { apiPost } from "@/lib/api";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const route = useRouter();
 
   async function handleSignup(formData: FormData) {
     setError(null);
@@ -35,9 +37,14 @@ export default function SignupPage() {
     };
 
     try {
-  await apiPost("/users/signup", payload);
+  const res = await apiPost<{ accessToken?: string; token?: string }>("/users/signup", payload);
+      const token = res?.accessToken || res?.token;
+      if (token && typeof document !== "undefined") {
+        document.cookie = `accessToken=${encodeURIComponent(token)}; Path=/; SameSite=Lax`;
+      }
       setSuccess("Signup successful. You can now log in.");
       // Optional redirect after short delay
+      route.push('/admin');
       // setTimeout(() => (window.location.href = "/users/login"), 800);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Signup failed";

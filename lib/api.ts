@@ -25,7 +25,7 @@ async function handle<T>(res: Response): Promise<T> {
 
 export async function apiGet<T = any>(endpoint: string): Promise<T> {
   const url = resolveUrl(endpoint);
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await authFetch(url, { cache: "no-store" });
   return handle<T>(res);
 }
 
@@ -38,7 +38,7 @@ export async function apiPost<T = any>(endpoint: string, body: any): Promise<T> 
     init.headers = { "Content-Type": "application/json" };
     init.body = JSON.stringify(body ?? {});
   }
-  const res = await fetch(url, init);
+  const res = await authFetch(url, init);
   return handle<T>(res);
 }
 
@@ -51,6 +51,52 @@ export async function apiPut<T = any>(endpoint: string, body?: any): Promise<T> 
     init.headers = { "Content-Type": "application/json" };
     init.body = JSON.stringify(body);
   }
-  const res = await fetch(url, init);
+  const res = await authFetch(url, init);
   return handle<T>(res);
+}
+
+// --- Auth helpers with cookie storage ---
+function getAccessTokenFromCookies(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|; )accessToken=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function setAccessTokenCookie(token: string) {
+  if (typeof document === "undefined") return;
+  // Session cookie; customize max-age if needed
+  document.cookie = `accessToken=${encodeURIComponent(token)}; Path=/; SameSite=Lax`;
+}
+
+async function tryRefreshToken(): Promise<boolean> {
+  try {
+    const url = resolveUrl("/refresh-token");
+    const res = await fetch(url, { method: "GET", cache: "no-store" });
+    if (!res.ok) return false;
+    const data = await res.json().catch(() => null) as any;
+    const newToken: string | undefined = data?.accessToken || data?.token;
+    if (newToken) {
+      setAccessTokenCookie(newToken);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function authFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers || {});
+  const token = getAccessTokenFromCookies();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const first = await fetch(url, { ...init, headers });
+  if (first.status !== 401) return first;
+
+  // Attempt refresh once and retry
+  const refreshed = await tryRefreshToken();
+  if (!refreshed) return first;
+  const retryHeaders = new Headers(init.headers || {});
+  const newToken = getAccessTokenFromCookies();
+  if (newToken) retryHeaders.set("Authorization", `Bearer ${newToken}`);
+  return fetch(url, { ...init, headers: retryHeaders });
 }

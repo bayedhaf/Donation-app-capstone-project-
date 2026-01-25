@@ -10,6 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { apiGet } from "@/lib/api";
 
 type Organization = {
   id: string;
@@ -27,31 +29,32 @@ export default function AdminOrganizationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function fetchOrgs() {
-      try {
-        const res = await fetch(
-          "https://dummyjson.com/c/9fc2-9a7c-40f1-938d" // /admin/orgs
-        );
-        if (!res.ok) throw new Error("Failed to fetch organizations");
-
-        const data = await res.json();
-        setOrgs(data);
-      } catch {
-        setError("Unable to load organizations");
-      } finally {
-        setLoading(false);
-      }
+  async function load() {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await apiGet<Organization[]>("/admin/orgs");
+      setOrgs(Array.isArray(data) ? data : []);
+    } catch {
+      setError("Unable to load organizations");
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchOrgs();
+  useEffect(() => {
+    const t = setTimeout(() => void load(), 0);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-r from-indigo-50 to-indigo-100 px-4 sm:px-6 md:px-10 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-indigo-700">
-        Registered Organizations
-      </h1>
+    <div className="min-h-screen w-full bg-linear-to-r from-indigo-50 to-indigo-100 px-4 sm:px-6 md:px-10 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-indigo-700">Registered Organizations</h1>
+        <Button onClick={load} className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={loading}>
+          {loading ? "Refreshing..." : "Refresh"}
+        </Button>
+      </div>
 
       {/* Loading */}
       {loading && (

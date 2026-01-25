@@ -20,7 +20,7 @@ export default function DonatedItemsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiGet<DonatedItem[]>("https://dummyjson.com/c/ff20-2f35-4562-8054");///admin/donated-items
+      const res = await apiGet<DonatedItem[]>("/admin/donated-items");///admin/donated-items
       setItems(Array.isArray(res) ? res : []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load";

@@ -17,13 +17,13 @@ export default function DonatePage() {
     setError(null);
     setSuccess(null);
 
-    const payload = new FormData();
-    payload.set("itemName", String(formData.get("itemName") || ""));
-    payload.set("itemType", String(formData.get("itemType") || ""));
-    payload.set("numberOfItems", String(formData.get("numberOfItems") || ""));
-    payload.set("description", String(formData.get("description") || ""));
-    const file = formData.get("item") as File | null;
-    if (file) payload.set("item", file);
+  const payload = new FormData();
+  payload.set("itemName", String(formData.get("itemName") || ""));
+  payload.set("itemType", String(formData.get("itemType") || ""));
+  payload.set("numberOfItems", String(formData.get("numberOfItems") || ""));
+  payload.set("description", String(formData.get("description") || ""));
+  const file = formData.get("file") as File | null;
+  if (file) payload.set("file", file);
     payload.set("street", String(formData.get("street") || ""));
     payload.set("city", String(formData.get("city") || ""));
     payload.set("region", String(formData.get("region") || ""));
@@ -48,9 +48,13 @@ export default function DonatePage() {
         </h1>
 
         <form
-          action={handleDonate}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const formEl = e.currentTarget as HTMLFormElement;
+            const fd = new FormData(formEl);
+            await handleDonate(fd);
+          }}
           className="space-y-4"
-          encType="multipart/form-data"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col">
@@ -69,8 +73,8 @@ export default function DonatePage() {
             </div>
 
             <div className="flex flex-col">
-              <Label htmlFor="item">Image (optional)</Label>
-              <Input id="item" name="item" type="file" accept="image/*" />
+              <Label htmlFor="file">Image (optional)</Label>
+              <Input id="file" name="file" type="file" accept="image/*" />
             </div>
 
             <div className="flex flex-col col-span-full">

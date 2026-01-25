@@ -12,33 +12,48 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { apiPost } from "@/lib/api";
+import { useState } from "react";
 
 export default function OrganizationFormPage() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
   async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
     const payload = {
-      organization_name: formData.get("organization_name"),
-      license_number: formData.get("license_number"),
-      registrationNumber: formData.get("registrationNumber"),
-      about: formData.get("about"),
-      email: formData.get("email"),
-      phone: formData.get("phone"),
-      website: formData.get("website"),
-      street: formData.get("street"),
-      city: formData.get("city"),
-      region: formData.get("region"),
-      latitude: formData.get("latitude"),
-      longitude: formData.get("longitude"),
-      logoUrl: formData.get("logoUrl"),
+      organization_name: String(formData.get("organization_name") || ""),
+      license_number: String(formData.get("license_number") || ""),
+      registrationNumber: String(formData.get("registrationNumber") || ""),
+      about: String(formData.get("about") || ""),
+      email: String(formData.get("email") || ""),
+      phone: String(formData.get("phone") || ""),
+      website: String(formData.get("website") || ""),
+      street: String(formData.get("street") || ""),
+      city: String(formData.get("city") || ""),
+      region: String(formData.get("region") || ""),
+      latitude: String(formData.get("latitude") || ""),
+      longitude: String(formData.get("longitude") || ""),
+      logoUrl: String(formData.get("logoUrl") || ""),
       isVerified: false,
       isActive: true,
     };
 
-    console.log(payload);
-    alert("Organization submitted (placeholder)");
+    try {
+      await apiPost("/admin/register-orgs", payload);
+      setSuccess("Organization registered successfully.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Registration failed";
+      setError(message);
+    }
+    setLoading(false);
   }
 
   return (
-    <div className="min-h-screen p-10 bg-gradient-to-r from-indigo-50 to-indigo-100 flex items-center justify-center px-4 py-10">
+  <div className="min-h-screen p-10 bg-linear-to-r from-indigo-50 to-indigo-100 flex items-center justify-center px-4 py-10">
       <Card className="w-full max-w-3xl bg-white border border-indigo-200 shadow-lg rounded-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-indigo-700">
@@ -124,13 +139,20 @@ export default function OrganizationFormPage() {
             </div>
 
             {/* Submit */}
-            <CardFooter className="sm:col-span-2 pt-6">
+            <CardFooter className="sm:col-span-2 pt-6 flex flex-col gap-3">
               <Button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60"
+                disabled={loading}
               >
-                Register Organization
+                {loading ? "Submitting..." : "Register Organization"}
               </Button>
+              {error && (
+                <p className="text-red-600 text-sm" role="alert">{error}</p>
+              )}
+              {success && (
+                <p className="text-green-600 text-sm" role="status">{success}</p>
+              )}
             </CardFooter>
           </form>
         </CardContent>

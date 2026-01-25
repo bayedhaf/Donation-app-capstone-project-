@@ -31,7 +31,7 @@ export default function DonationRequestsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiGet<DonationRequest[]>("https://dummyjson.com/c/ff20-2f35-4562-8054");
+      const res = await apiGet<DonationRequest[]>("/admin/donation-requests");
       setData(Array.isArray(res) ? res : []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load";
