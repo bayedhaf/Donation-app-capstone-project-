@@ -31,17 +31,17 @@ export function AppSidebar() {
 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
+          <SidebarMenuButton asChild>
                       <a
                         href={item.url}
-                        className={`flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${
+            className={`flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${
                           isActive
                             ? "bg-indigo-100 text-indigo-800 font-semibold"
                             : "text-indigo-700 hover:bg-indigo-50 hover:text-indigo-900"
                         }`}
                       >
                         <item.icon className="w-5 h-5" />
-                        <span>{item.title}</span>
+            <span className="truncate">{item.title}</span>
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

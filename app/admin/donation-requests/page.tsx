@@ -48,7 +48,7 @@ export default function DonationRequestsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen mx-auto bg-gradient-to-r from-indigo-50 to-indigo-100 px-4 sm:px-6 md:px-10 py-8">
+    <div className="min-h-screen mx-auto bg-linear-to-r from-indigo-50 to-indigo-100 px-4 sm:px-6 md:px-10 py-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 sm:gap-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700">Donation Requests</h1>
         <Button
@@ -70,7 +70,44 @@ export default function DonationRequestsPage() {
           {error && (
             <p className="text-red-600 text-sm mb-3" role="alert">{error}</p>
           )}
-          <Table className="min-w-[800px] sm:min-w-full">
+          {/* Mobile list (visible on small screens), table hidden */}
+          <div className="sm:hidden space-y-3">
+            {!loading && data.length === 0 && (
+              <p className="text-center text-muted-foreground">No requests found.</p>
+            )}
+            {data.map((r, idx) => (
+              <div key={r.id ?? idx.toString()} className="rounded-md border border-indigo-100 p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-indigo-700">{r.itemName}</p>
+                    <p className="text-xs text-gray-500">{r.itemType} • Qty: {r.numberOfItems}</p>
+                  </div>
+                  {r.item ? (
+                    <button
+                      type="button"
+                      className="text-indigo-600 text-sm hover:underline"
+                      onClick={() => setImagePreview(r.item as string)}
+                    >
+                      View
+                    </button>
+                  ) : (
+                    <span className="text-gray-400 text-sm">No image</span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-gray-700 line-clamp-3">{r.description}</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                  <span><span className="font-medium">Street:</span> {r.street}</span>
+                  <span><span className="font-medium">City:</span> {r.city}</span>
+                  <span><span className="font-medium">Region:</span> {r.region}</span>
+                  <span><span className="font-medium">Lat:</span> {r.latitude}</span>
+                  <span><span className="font-medium">Long:</span> {r.longitude}</span>
+                </div>
+              </div>
+            ))}
+            <div className="text-right text-xs text-gray-500">{loading ? "Loading requests..." : `Total: ${data.length}`}</div>
+          </div>
+          {/* Desktop table (hidden on small screens) */}
+          <Table className="min-w-200 sm:min-w-full">
             <TableHeader>
               <TableRow>
                 <TableHead>Item Name</TableHead>
@@ -98,7 +135,7 @@ export default function DonationRequestsPage() {
                   <TableCell>{r.itemName}</TableCell>
                   <TableCell>{r.itemType}</TableCell>
                   <TableCell>{r.numberOfItems}</TableCell>
-                  <TableCell className="hidden sm:table-cell max-w-[150px] truncate" title={r.description}>
+                  <TableCell className="hidden sm:table-cell max-w-37.5 truncate" title={r.description}>
                     {r.description}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{r.street}</TableCell>
