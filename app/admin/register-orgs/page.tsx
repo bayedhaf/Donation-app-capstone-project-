@@ -62,8 +62,8 @@ export default function OrganizationFormPage() {
   }
 
   return (
-  <div className="min-h-screen p-10 bg-linear-to-r from-indigo-50 to-indigo-100 flex items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-3xl bg-white border border-indigo-200 shadow-lg rounded-xl">
+  <div className="min-h-screen bg-linear-to-r from-indigo-50 to-indigo-100 flex items-center justify-center px-3 py-6 sm:px-6 sm:py-10 overflow-x-hidden">
+      <Card className="w-full max-w-xl sm:max-w-2xl bg-white border border-indigo-200 shadow-lg rounded-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-indigo-700">
             Organization Registration
@@ -74,7 +74,7 @@ export default function OrganizationFormPage() {
         </CardHeader>
 
         <CardContent>
-          <form action={handleSubmit} className="grid max-w-lg mx-auto mt-12 space-y-4 gap-6 sm:grid-cols-2">
+          <form action={handleSubmit} className="grid gap-4 sm:gap-6 sm:grid-cols-2 mt-6">
             {/* Organization Name */}
             <div className="grid gap-2 sm:col-span-2">
               <Label className="text-indigo-700">Organization Name<strong className="text-red-500">*</strong></Label>
@@ -148,7 +148,7 @@ export default function OrganizationFormPage() {
             </div>
 
             {/* Submit */}
-            <CardFooter className="sm:col-span-2 pt-6 flex flex-col gap-3">
+            <CardFooter className="sm:col-span-2 pt-4 sm:pt-6 flex flex-col gap-3">
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60"

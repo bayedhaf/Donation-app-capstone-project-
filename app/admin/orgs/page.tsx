@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { apiGet } from "@/lib/api";
 
 type Organization = {
+  _id?: string;
   id: string;
   organization_name: string;
   // flat fallbacks (older shape)
@@ -32,19 +33,20 @@ export default function AdminOrganizationsPage() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [manualToken, setManualToken] = useState<string>("");
 
-  async function load() {
+  const load = useCallback(async function load() {
     setLoading(true);
     setError("");
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE || "https://capstone-api-dwzu.onrender.com";
       const tokenMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )accessToken=([^;]+)/) : null;
-      const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : undefined;
+      const cookieToken = tokenMatch ? decodeURIComponent(tokenMatch[1]) : undefined;
+      const token = manualToken?.trim() ? manualToken.trim() : cookieToken;
       if (!token) {
-        console.warn("/admin/orgs: No accessToken cookie found. Are you logged in as admin?");
+        console.warn("/admin/orgs: No accessToken cookie found and no manual token provided. Are you logged in as admin?");
       }
-      const data = await apiGet<unknown>("/admin/orgs", { baseUrl, token });
-      console.log("/admin/orgs response:", data);
+  const data = await apiGet<unknown>("/admin/orgs", { baseUrl, token });
       type WrappedData = { data?: unknown; results?: unknown; organizations?: unknown };
       const isWrapped = (x: unknown): x is WrappedData => typeof x === "object" && x !== null;
       let list: unknown = [];
@@ -66,21 +68,24 @@ export default function AdminOrganizationsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [manualToken]);
 
   useEffect(() => {
     const t = setTimeout(() => void load(), 0);
     return () => clearTimeout(t);
-  }, []);
+  }, [load]);
 
   return (
     <div className="min-h-screen w-full bg-linear-to-r from-indigo-50 to-indigo-100 px-4 sm:px-6 md:px-10 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-indigo-700">Registered Organizations</h1>
-        <Button onClick={load} className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={loading}>
-          {loading ? "Refreshing..." : "Refresh"}
-        </Button>
-      </div>
+        <div className="flex items-center gap-2">
+        
+          <Button onClick={load} className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={loading}>
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
+      </div> 
 
       {/* Loading */}
       {loading && (
@@ -89,6 +94,8 @@ export default function AdminOrganizationsPage() {
 
       {/* Error */}
       {error && <p className="text-red-500 text-sm">{error}</p>}
+
+
 
       {/* Empty */}
       {!loading && orgs.length === 0 && (
@@ -100,7 +107,7 @@ export default function AdminOrganizationsPage() {
         <div className="sm:hidden space-y-3">
       <p className="text-xs text-gray-500">Showing {orgs.length} organization(s).</p>
           {orgs.map((org) => (
-            <div key={org.id} className="rounded-md border border-indigo-100 bg-white p-3">
+            <div key={org._id ?? org.id} className="rounded-md border border-indigo-100 bg-white p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-semibold text-indigo-700 truncate">{org.organization_name}</p>
@@ -149,7 +156,7 @@ export default function AdminOrganizationsPage() {
 
             <TableBody>
               {orgs.map((org) => (
-                <TableRow key={org.id} className="hover:bg-indigo-50/50">
+                <TableRow key={org._id ?? org.id} className="hover:bg-indigo-50/50">
                   <TableCell className="font-medium text-indigo-700">
                     {org.organization_name}
                   </TableCell>
