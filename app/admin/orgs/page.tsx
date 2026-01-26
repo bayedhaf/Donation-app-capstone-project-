@@ -16,10 +16,14 @@ import { apiGet } from "@/lib/api";
 type Organization = {
   id: string;
   organization_name: string;
-  email: string;
+  // flat fallbacks (older shape)
+  email?: string;
   phone?: string;
   city?: string;
   region?: string;
+  // nested shape from backend
+  contact?: { email?: string; phone?: string };
+  address?: { city?: string; region?: string };
   isVerified?: boolean;
   isActive?: boolean;
 };
@@ -33,10 +37,32 @@ export default function AdminOrganizationsPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await apiGet<Organization[]>("/admin/orgs");
-      setOrgs(Array.isArray(data) ? data : []);
-    } catch {
-      setError("Unable to load organizations");
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE || "https://capstone-api-dwzu.onrender.com";
+      const tokenMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )accessToken=([^;]+)/) : null;
+      const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : undefined;
+      if (!token) {
+        console.warn("/admin/orgs: No accessToken cookie found. Are you logged in as admin?");
+      }
+      const data = await apiGet<unknown>("/admin/orgs", { baseUrl, token });
+      console.log("/admin/orgs response:", data);
+      type WrappedData = { data?: unknown; results?: unknown; organizations?: unknown };
+      const isWrapped = (x: unknown): x is WrappedData => typeof x === "object" && x !== null;
+      let list: unknown = [];
+      if (Array.isArray(data)) {
+        list = data;
+      } else if (isWrapped(data)) {
+        if (Array.isArray(data.data)) list = data.data;
+        else if (Array.isArray(data.results)) list = data.results;
+        else if (Array.isArray(data.organizations)) list = data.organizations;
+      }
+      setOrgs(list as Organization[]);
+    } catch (err: unknown) {
+      const msg = typeof err === "object" && err && "message" in err ? String((err as { message?: unknown }).message) : "Unable to load organizations";
+      if (msg.includes("401") || msg.toLowerCase().includes("access denied")) {
+        setError("Access denied. Please log in as admin.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -70,14 +96,15 @@ export default function AdminOrganizationsPage() {
       )}
 
       {/* Mobile cards */}
-      {!loading && orgs.length > 0 && (
+    {!loading && orgs.length > 0 && (
         <div className="sm:hidden space-y-3">
+      <p className="text-xs text-gray-500">Showing {orgs.length} organization(s).</p>
           {orgs.map((org) => (
             <div key={org.id} className="rounded-md border border-indigo-100 bg-white p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-semibold text-indigo-700 truncate">{org.organization_name}</p>
-                  <p className="text-xs text-gray-600 wrap-break-word">{org.email}</p>
+                  <p className="text-xs text-gray-600 wrap-break-word">{org.contact?.email ?? org.email ?? '-'}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <Badge
@@ -95,9 +122,9 @@ export default function AdminOrganizationsPage() {
                 </div>
               </div>
               <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-700">
-                <span><span className="font-medium">Phone:</span> {org.phone ?? "-"}</span>
-                <span><span className="font-medium">City:</span> {org.city ?? "-"}</span>
-                <span><span className="font-medium">Region:</span> {org.region ?? "-"}</span>
+                <span><span className="font-medium">Phone:</span> {org.contact?.phone ?? org.phone ?? "-"}</span>
+                <span><span className="font-medium">City:</span> {org.address?.city ?? org.city ?? "-"}</span>
+                <span><span className="font-medium">Region:</span> {org.address?.region ?? org.region ?? "-"}</span>
               </div>
             </div>
           ))}
@@ -126,10 +153,10 @@ export default function AdminOrganizationsPage() {
                   <TableCell className="font-medium text-indigo-700">
                     {org.organization_name}
                   </TableCell>
-                  <TableCell>{org.email}</TableCell>
-                  <TableCell>{org.phone ?? "-"}</TableCell>
-                  <TableCell>{org.city ?? "-"}</TableCell>
-                  <TableCell>{org.region ?? "-"}</TableCell>
+                  <TableCell>{org.contact?.email ?? org.email ?? '-'}</TableCell>
+                  <TableCell>{org.contact?.phone ?? org.phone ?? '-'}</TableCell>
+                  <TableCell>{org.address?.city ?? org.city ?? '-'}</TableCell>
+                  <TableCell>{org.address?.region ?? org.region ?? '-'}</TableCell>
 
                   <TableCell>
                     <Badge

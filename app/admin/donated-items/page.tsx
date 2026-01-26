@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { apiGet } from "@/lib/api";
 
 type DonatedItem = {
-  id?: string;
-  itemName: string;
+  _id?: string;
+  donationRequestId: string;
+  organizationId: string;
+  donatedAt?: string; // ISO date
 };
 
 export default function DonatedItemsPage() {
@@ -20,11 +22,29 @@ export default function DonatedItemsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiGet<DonatedItem[]>("/admin/donated-items");///admin/donated-items
-      setItems(Array.isArray(res) ? res : []);
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE || "https://capstone-api-dwzu.onrender.com";
+      const tokenMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )accessToken=([^;]+)/) : null;
+      const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : undefined;
+      const res = await apiGet<unknown>("/admin/donated-items", { baseUrl, token });
+      console.log("/admin/donated-items response:", res);
+  type Wrapped = { data?: unknown; results?: unknown; items?: unknown; donatedItems?: unknown };
+      const isWrapped = (x: unknown): x is Wrapped => typeof x === "object" && x !== null;
+      let list: unknown = [];
+      if (Array.isArray(res)) list = res;
+      else if (isWrapped(res)) {
+        if (Array.isArray(res.data)) list = res.data;
+        else if (Array.isArray(res.results)) list = res.results;
+        else if (Array.isArray(res.items)) list = res.items;
+  else if (Array.isArray(res.donatedItems)) list = res.donatedItems;
+      }
+      setItems(list as DonatedItem[]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load";
-      setError(msg);
+      if (msg.includes("401") || msg.toLowerCase().includes("access denied")) {
+        setError("Access denied. Please log in as admin.");
+      } else {
+        setError(msg);
+      }
     }
     setLoading(false);
   }
@@ -64,13 +84,20 @@ export default function DonatedItemsPage() {
 
         {!loading && items.map((item, idx) => (
           <Card
-            key={item.id ?? idx.toString()}
+            key={item._id ?? idx.toString()}
             className="transition-all hover:shadow-lg hover:-translate-y-1 border border-indigo-200 bg-white"
           >
             <CardHeader>
               <CardTitle className="text-indigo-700 font-semibold">
-                {item.itemName}
+                Donated Item
               </CardTitle>
+              <div className="text-sm text-gray-700 space-y-1">
+                <div><span className="font-medium">Donation Request:</span> {item.donationRequestId}</div>
+                <div><span className="font-medium">Organization:</span> {item.organizationId}</div>
+                {item.donatedAt ? (
+                  <div><span className="font-medium">Donated At:</span> {new Date(item.donatedAt).toLocaleString()}</div>
+                ) : null}
+              </div>
             </CardHeader>
           </Card>
         ))}

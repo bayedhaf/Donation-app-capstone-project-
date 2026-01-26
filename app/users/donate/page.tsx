@@ -18,17 +18,18 @@ export default function DonatePage() {
     setSuccess(null);
 
   const payload = new FormData();
-  payload.set("itemName", String(formData.get("itemName") || ""));
-  payload.set("itemType", String(formData.get("itemType") || ""));
-  payload.set("numberOfItems", String(formData.get("numberOfItems") || ""));
-  payload.set("description", String(formData.get("description") || ""));
-  const file = formData.get("file") as File | null;
-  if (file) payload.set("file", file);
-    payload.set("street", String(formData.get("street") || ""));
-    payload.set("city", String(formData.get("city") || ""));
-    payload.set("region", String(formData.get("region") || ""));
-    payload.set("latitude", String(formData.get("latitude") || ""));
-    payload.set("longitude", String(formData.get("longitude") || ""));
+  const trim = (v: FormDataEntryValue | null) => String(v || "").trim();
+  payload.set("itemName", trim(formData.get("itemName")));
+  payload.set("itemType", trim(formData.get("itemType")));
+  payload.set("numberOfItems", String(Number(trim(formData.get("numberOfItems")) || 0)));
+  payload.set("description", trim(formData.get("description")));
+  const file = formData.get("item") as File | null;
+  if (file) payload.set("item", file);
+  payload.set("street", trim(formData.get("street")));
+  payload.set("city", trim(formData.get("city")));
+  payload.set("region", trim(formData.get("region")));
+  payload.set("latitude", trim(formData.get("latitude")));
+  payload.set("longitude", trim(formData.get("longitude")));
 
     try {
       await apiPost("/users/donate", payload);
@@ -41,7 +42,7 @@ export default function DonatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-20">
+  <div className="min-h-screen bg-linear-to-br from-indigo-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-20">
       <div className="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 sm:p-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700 mb-6 text-center sm:text-left">
           Donate Items
@@ -73,8 +74,8 @@ export default function DonatePage() {
             </div>
 
             <div className="flex flex-col">
-              <Label htmlFor="file">Image (optional)</Label>
-              <Input id="file" name="file" type="file" accept="image/*" />
+              <Label htmlFor="item">Image (optional)</Label>
+              <Input id="item" name="item" type="file" accept="image/*" />
             </div>
 
             <div className="flex flex-col col-span-full">

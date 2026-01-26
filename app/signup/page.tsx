@@ -139,12 +139,7 @@ export default function SignupPage() {
               </Button>
             </Link>
           </CardAction>
-          <Button
-            variant="outline"
-            className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-50"
-          >
-            Login with Google
-          </Button>
+        
         </CardFooter>
       </Card>
     </div>

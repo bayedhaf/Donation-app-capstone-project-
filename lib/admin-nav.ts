@@ -34,7 +34,7 @@ export const items = [
     description: "Track all items donated to the platform",
   },
   {
-    title: "Orgs",
+    title: "Organizations",
     url: "/admin/orgs",
     icon: Building2,
     description: "Manage registered NGOs and organizations",

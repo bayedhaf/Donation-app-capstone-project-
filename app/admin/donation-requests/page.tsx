@@ -31,11 +31,27 @@ export default function DonationRequestsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiGet<DonationRequest[]>("/admin/donation-requests");
-      setData(Array.isArray(res) ? res : []);
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE || "https://capstone-api-dwzu.onrender.com";
+  const tokenMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )accessToken=([^;]+)/) : null;
+  const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : undefined;
+  type Wrapped = { data?: DonationRequest[]; results?: DonationRequest[] } | DonationRequest[];
+  const res = await apiGet<Wrapped>("/admin/donation-requests", { baseUrl, token });
+      const list: DonationRequest[] = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.results)
+            ? res.results
+            : [];
+      console.log("donation-requests response", res);
+      setData(list);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load";
-      setError(msg);
+      if (msg.includes("401") || msg.toLowerCase().includes("access denied")) {
+        setError("Access denied. Please log in as admin.");
+      } else {
+        setError(msg);
+      }
     }
     setLoading(false);
   }
@@ -68,12 +84,18 @@ export default function DonationRequestsPage() {
         </CardHeader>
         <CardContent className="p-2 sm:p-4">
           {error && (
-            <p className="text-red-600 text-sm mb-3" role="alert">{error}</p>
+            <div className="mb-3 rounded-md border border-red-200 bg-red-50 p-2">
+              <p className="text-red-700 text-sm" role="alert">{error}</p>
+              <p className="text-xs text-red-600 mt-1">If this is an authorization error, please log in and retry.</p>
+            </div>
           )}
           {/* Mobile list (visible on small screens), table hidden */}
           <div className="sm:hidden space-y-3">
-            {!loading && data.length === 0 && (
-              <p className="text-center text-muted-foreground">No requests found.</p>
+            {!loading && data.length === 0 && !error && (
+              <div className="text-center text-muted-foreground">
+                <p>No requests found.</p>
+                <p className="text-xs mt-1">Make sure you are logged in and there are donation requests on the server.</p>
+              </div>
             )}
             {data.map((r, idx) => (
               <div key={r.id ?? idx.toString()} className="rounded-md border border-indigo-100 p-3">
@@ -123,7 +145,7 @@ export default function DonationRequestsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!loading && data.length === 0 && (
+              {!loading && data.length === 0 && !error && (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center text-muted-foreground">
                     No requests found.

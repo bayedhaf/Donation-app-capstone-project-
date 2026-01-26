@@ -24,30 +24,39 @@ export default function OrganizationFormPage() {
     setLoading(true);
     setError(null);
     setSuccess(null);
+    const trim = (v: FormDataEntryValue | null) => String(v || "").trim();
+    const email = trim(formData.get("email"));
+    // Email is optional; validate only if provided
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setError("Invalid email address");
+      setLoading(false);
+      return;
+    }
+    // Build minimal payload with required fields first to avoid backend crashes
     const payload = {
-      organization_name: String(formData.get("organization_name") || ""),
-      license_number: String(formData.get("license_number") || ""),
-      registrationNumber: String(formData.get("registrationNumber") || ""),
-      about: String(formData.get("about") || ""),
-      email: String(formData.get("email") || ""),
-      phone: String(formData.get("phone") || ""),
-      website: String(formData.get("website") || ""),
-      street: String(formData.get("street") || ""),
-      city: String(formData.get("city") || ""),
-      region: String(formData.get("region") || ""),
-      latitude: String(formData.get("latitude") || ""),
-      longitude: String(formData.get("longitude") || ""),
-      logoUrl: String(formData.get("logoUrl") || ""),
-      isVerified: false,
+      organization_name: trim(formData.get("organization_name")),
+      license_number: trim(formData.get("license_number")),
+      registrationNumber: trim(formData.get("registrationNumber")),
+      about: trim(formData.get("about")),
+      email,
+      phone: trim(formData.get("phone")),
+      website: trim(formData.get("website")),
+      street: trim(formData.get("street")),
+      city: trim(formData.get("city")),
+      region: trim(formData.get("region")),
+      latitude: trim(formData.get("latitude")),
+      longitude: trim(formData.get("longitude")),
+      logoUrl: trim(formData.get("logoUrl")),
+      isVerified: true,
       isActive: true,
     };
 
     try {
-      await apiPost("/admin/register-orgs", payload);
-      setSuccess("Organization registered successfully.");
+  await apiPost("/admin/register-orgs", payload);
+  setSuccess("Organization registered successfully.");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Registration failed";
-      setError(message);
+      setError(message || "Registration failed");
     }
     setLoading(false);
   }
@@ -91,8 +100,8 @@ export default function OrganizationFormPage() {
 
             {/* Contact */}
             <div className="grid gap-2">
-              <Label className="text-indigo-700">Email</Label>
-              <Input type="email" name="email" required />
+              <Label className="text-indigo-700">Email (optional)</Label>
+              <Input type="email" name="email" />
             </div>
 
             <div className="grid gap-2">
@@ -148,7 +157,10 @@ export default function OrganizationFormPage() {
                 {loading ? "Submitting..." : "Register Organization"}
               </Button>
               {error && (
-                <p className="text-red-600 text-sm" role="alert">{error}</p>
+                <div className="rounded-md border border-red-200 bg-red-50 p-2">
+                  <p className="text-red-700 text-sm" role="alert">{error}</p>
+                  <p className="text-xs text-red-600 mt-1">Ensure you are logged in and fields are valid.</p>
+                </div>
               )}
               {success && (
                 <p className="text-green-600 text-sm" role="status">{success}</p>
